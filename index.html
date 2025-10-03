@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Development Life Cycle (SDLC)</title>
+    <!-- Load Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configure Tailwind for Dark Mode and custom colors
+        tailwind.config = {
+            darkMode: 'class', // Enables dark mode based on the 'dark' class on the HTML element
+            theme: {
+                extend: {
+                    colors: {
+                        'current-bg': 'var(--bg-color)',
+                        'current-text': 'var(--text-color)',
+                        'current-primary': 'var(--primary-color)',
+                        'current-accent': 'var(--accent-color)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Roboto', 'Open Sans', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom CSS Variables for Light/Dark Theme and general styling */
+        :root {
+            /* Light Mode Defaults */
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --primary-color: #3b82f6; /* Blue */
+            --accent-color: #60a5fa;
+            --card-bg: #f9fafb;
+            --border-color: #e5e7eb;
+        }
+        .dark {
+            /* Dark Mode Overrides */
+            --bg-color: #111827;
+            --text-color: #f3f4f6;
+            --primary-color: #10b981; /* Emerald Green */
+            --accent-color: #34d399;
+            --card-bg: #1f2937;
+            --border-color: #374151;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Ensure content starts below the fixed header */
+        main {
+            padding-top: 5rem; /* Space for fixed header */
+        }
+        
+        /* Apply smooth transition to all color-related properties */
+        .transition-colors {
+            transition-property: background-color, border-color, color, fill, stroke;
+            transition-duration: 500ms;
+        }
+        
+        /* Subtle animation on content elements */
+        .slide-content > * {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transition-delay: 0s; /* Will be set dynamically by JS */
+        }
+
+        .slide-content.visible > * {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Sidebar: Hidden on mobile, visible on desktop */
+        .sidebar {
+            display: none;
+            width: 20rem;
+        }
+
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .sidebar {
+                display: block;
+            }
+            main {
+                margin-left: 20rem; /* Offset for fixed sidebar */
+            }
+        }
+
+        /* Custom scrollbar styling (optional but improves UX) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+    </style>
+</head>
+<body class="bg-current-bg text-current-text font-sans transition-colors">
+
+    <!-- Fixed Header & Navigation -->
+    <header class="fixed top-0 left-0 w-full lg:w-[calc(100%-20rem)] lg:left-[20rem] z-30 shadow-lg p-4 bg-current-bg border-b border-border-color transition-colors flex items-center justify-between">
+        <!-- Presentation Title -->
+        <h1 class="text-xl font-bold text-current-primary truncate">SDLC Presentation</h1>
+
+        <!-- Navigation Controls & Page Numbering -->
+        <div class="flex items-center space-x-4">
+            <div id="page-number" class="text-sm font-medium hidden sm:block">Slide 0 of 10</div>
+            <button id="prev-button" aria-label="Previous Slide" class="p-2 rounded-full bg-current-accent text-white hover:bg-current-primary disabled:opacity-50 transition" onclick="navigate(-1)">
+                <!-- Lucide: Chevron Left -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button id="next-button" aria-label="Next Slide" class="p-2 rounded-full bg-current-accent text-white hover:bg-current-primary disabled:opacity-50 transition" onclick="navigate(1)">
+                <!-- Lucide: Chevron Right -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <!-- Mobile Agenda Toggle (Visible only on mobile) -->
+            <button id="agenda-toggle" aria-label="Toggle Agenda Menu" class="lg:hidden p-2 rounded-full bg-current-primary text-white hover:bg-current-accent transition">
+                <!-- Lucide: Menu -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+            <!-- Dark Mode Toggle -->
+            <button id="theme-toggle" aria-label="Toggle Dark/Light Theme" class="p-2 rounded-full bg-card-bg border border-border-color text-current-text hover:bg-current-primary hover:text-white transition">
+                <!-- Icon will be set by JS (Sun/Moon) -->
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Fixed Sidebar (Desktop only) -->
+    <aside id="sidebar-agenda" class="sidebar fixed top-0 left-0 h-screen z-20 pt-20 p-6 shadow-xl bg-card-bg border-r border-border-color transition-colors overflow-y-auto">
+        <h3 class="text-lg font-semibold mb-4 text-current-primary flex items-center">
+            <!-- Lucide: Clipboard List -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+            Presentation Agenda
+        </h3>
+        <nav>
+            <ul id="agenda-list" class="space-y-2">
+                <!-- Agenda items will be dynamically generated here by JS -->
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Mobile Agenda Modal (Hidden by default) -->
+    <div id="agenda-modal" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden">
+        <div class="absolute inset-y-0 right-0 w-3/4 bg-current-bg p-6 shadow-2xl overflow-y-auto transition-all duration-300">
+            <div class="flex justify-between items-center mb-4 border-b pb-2 border-border-color">
+                <h3 class="text-xl font-bold text-current-primary">Agenda</h3>
+                <button onclick="closeAgendaModal()" class="text-current-text hover:text-current-primary">
+                     <!-- Lucide: X -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <nav>
+                <ul id="mobile-agenda-list" class="space-y-3">
+                    <!-- Agenda items will be mirrored here by JS -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Main Content Area (Scrollable Slides) -->
+    <main id="main-content" class="min-h-screen transition-all duration-500">
+        <!-- Slide 0: Title Slide -->
+        <section id="slide-0" data-slide-index="0" data-title="Cover Slide" class="min-h-screen flex items-center justify-center p-8 bg-current-bg text-current-text transition-colors duration-500">
+            <div class="max-w-4xl text-center p-10 rounded-xl shadow-2xl bg-card-bg border border-border-color slide-content visible">
+                <h2 class="text-5xl font-extrabold mb-4 text-current-primary" style="transition-delay: 0.1s;">Software Development Life Cycle (SDLC)</h2>
+                <p class="text-2xl mt-8 mb-2 font-medium" style="transition-delay: 0.3s;">Besong Wisdom</p>
+                <p class="text-xl text-gray-500 dark:text-gray-400" style="transition-delay: 0.4s;">College of Technology, University of Buea</p>
+                <p class="text-lg mt-4 text-gray-500 dark:text-gray-400" style="transition-delay: 0.5s;">15 / 09 / 2025</p>
+            </div>
+        </section>
+
+        <!-- Slide 1: Introduction (Page 1) -->
+        <section id="slide-1" data-slide-index="1" data-title="Introduction to SDLC" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Book Open -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Introduction to SDLC
+                </h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="p-6 rounded-xl bg-card-bg shadow-lg border border-border-color" style="transition-delay: 0.3s;">
+                        <h3 class="text-xl font-semibold mb-3 text-current-accent">Definition</h3>
+                        <p>A structured framework that guides teams through systematic phases for developing high-quality software applications.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-card-bg shadow-lg border border-border-color" style="transition-delay: 0.4s;">
+                        <h3 class="text-xl font-semibold mb-3 text-current-accent">Purpose</h3>
+                        <p>Ensures projects meet customer expectations on time and within budget by providing a roadmap for every phase of development.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-card-bg shadow-lg border border-border-color" style="transition-delay: 0.5s;">
+                        <h3 class="text-xl font-semibold mb-3 text-current-accent">Importance</h3>
+                        <p>Provides a clear, organized framework that enhances visibility, improves risk management, and facilitates efficient planning and scheduling.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The 6 Phases (Page 2) -->
+        <section id="slide-2" data-slide-index="2" data-title="The 6 Phases of SDLC" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: List Ordered -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h.01"/><path d="M4 12h.01"/><path d="M4 18h.01"/></svg>
+                    The 6 Phases of SDLC
+                </h2>
+                <ol class="list-decimal list-inside space-y-3 text-xl pl-5">
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.3s;">Requirements Gathering and Analysis</li>
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.4s;">Design</li>
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.5s;">Implementation (Coding)</li>
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.6s;">Testing</li>
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.7s;">Deployment</li>
+                    <li class="p-3 rounded-lg bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.8s;">Maintenance</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Slide 3: Requirements (Page 3) -->
+        <section id="slide-3" data-slide-index="3" data-title="Phase 1: Requirements Gathering" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Clipboard List -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+                    Phase 1: Requirements Gathering and Analysis
+                </h2>
+                <ul class="space-y-4 text-lg">
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.3s;">
+                        <span class="font-semibold text-current-accent">Objective:</span> Define and document the functional and non-functional needs of the system.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.5s;">
+                        <span class="font-semibold text-current-accent">Activities:</span> Elicitation, analysis, documentation, and validation of user requirements.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.7s;">
+                        <span class="font-semibold text-current-accent">Key Deliverable:</span> Software Requirements Specification (SRS) document.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 4: Design (Page 4) -->
+        <section id="slide-4" data-slide-index="4" data-title="Phase 2: Design" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Layout Grid -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="21"/></svg>
+                    Phase 2: Design
+                </h2>
+                <ul class="space-y-4 text-lg">
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.3s;">
+                        <span class="font-semibold text-current-accent">Objective:</span> Create the architecture and design blueprints for the system.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.5s;">
+                        <span class="font-semibold text-current-accent">Activities:</span> High-level design (architecture) and Low-level design (components, interfaces).
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.7s;">
+                        <span class="font-semibold text-current-accent">Key Deliverables:</span> Design document, database schema, user interface (UI) mockups.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 5: Implementation (Page 5) -->
+        <section id="slide-5" data-slide-index="5" data-title="Phase 3: Implementation (Coding)" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Code -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" x2="12" y1="3" y2="21"/></svg>
+                    Phase 3: Implementation (Coding)
+                </h2>
+                <ul class="space-y-4 text-lg">
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.3s;">
+                        <span class="font-semibold text-current-accent">Objective:</span> Translate the design into actual working code.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.5s;">
+                        <span class="font-semibold text-current-accent">Activities:</span> Writing code, unit testing, and code review.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.7s;">
+                        <span class="font-semibold text-current-accent">Key Consideration:</span> Adherence to coding standards and best practices.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 6: Testing (Page 6) -->
+        <section id="slide-6" data-slide-index="6" data-title="Phase 4: Testing" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Flask Conical -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31l1.5 1.5L13 9.3V2"/><path d="M5 2c0 2.9 0 5.1 0 7.31A2 2 0 0 0 6.5 11l.5.5V22h12V11.5l.5-.5a2 2 0 0 0 1.5-1.69V2"/></svg>
+                    Phase 4: Testing
+                </h2>
+                <ul class="space-y-4 text-lg">
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.3s;">
+                        <span class="font-semibold text-current-accent">Objective:</span> Verify that the system meets the specified requirements and is defect-free.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.5s;">
+                        <span class="font-semibold text-current-accent">Types:</span> Unit testing, integration testing, system testing, acceptance testing.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.7s;">
+                        <span class="font-semibold text-current-accent">Outcome:</span> Identification and resolution of defects.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 7: Deployment (Page 7) -->
+        <section id="slide-7" data-slide-index="7" data-title="Phase 5: Deployment" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Rocket -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 17.5a6 6 0 0 0 9 0c.32-1.27.7-2.34 1.76-3.4L20 7.2l-3.2-3.2-7.86 5.74c-1.06 1.06-2.13 1.44-3.4 1.76a6 6 0 0 0 0 9z"/><path d="m15 15-2 2"/><path d="m20 7-3-3"/><path d="m14 2 8 8"/></svg>
+                    Phase 5: Deployment
+                </h2>
+                <ul class="space-y-4 text-lg">
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.3s;">
+                        <span class="font-semibold text-current-accent">Objective:</span> Make the software operational and available to end-users.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.5s;">
+                        <span class="font-semibold text-current-accent">Activities:</span> Installation, configuration, and migration of data.
+                    </li>
+                    <li class="p-4 rounded-xl bg-card-bg shadow-md border-l-4 border-current-primary" style="transition-delay: 0.7s;">
+                        <span class="font-semibold text-current-accent">Key Consideration:</span> Smooth transition from development to production environment.
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 8: Maintenance (Page 8) -->
+        <section id="slide-8" data-slide-index="8" data-title="Phase 6: Maintenance" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Wrench -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2 2 0 0 1-2.83 0l-1.41-1.41a2 2 0 0 1 0-2.83l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77Z"/></svg>
+                    Phase 6: Maintenance
+                </h2>
+                <div class="grid md:grid-cols-2 gap-6 text-lg">
+                    <div class="p-6 rounded-xl bg-card-bg shadow-lg border border-border-color" style="transition-delay: 0.3s;">
+                        <h3 class="text-xl font-semibold mb-2 text-current-accent">Objective</h3>
+                        <p>Ensure the system continues to function effectively after deployment.</p>
+                    </div>
+                    <div class="p-6 rounded-xl bg-card-bg shadow-lg border border-border-color" style="transition-delay: 0.5s;">
+                        <h3 class="text-xl font-semibold mb-2 text-current-accent">Types</h3>
+                        <ul class="list-disc list-inside">
+                            <li>Corrective (fixing bugs)</li>
+                            <li>Adaptive (updating to new environments)</li>
+                            <li>Perfective (enhancing features)</li>
+                            <li>Preventive (improving reliability)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 9: SDLC Models (Page 9) -->
+        <section id="slide-9" data-slide-index="9" data-title="Popular SDLC Models" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Layers 3 -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.5 19 14 12 10.5 5 14l7 3.5Z"/><path d="m19 14 7-3.5-7-3.5L5 10.5l7 3.5Z"/><path d="m19 7 7-3.5-7-3.5L5 3.5l7 3.5Z"/></svg>
+                    Popular SDLC Models
+                </h2>
+                <div class="grid sm:grid-cols-2 gap-4 text-lg">
+                    <ul class="space-y-3">
+                        <li class="font-semibold text-current-accent" style="transition-delay: 0.3s;">Waterfall Model: <span class="font-normal text-current-text">Linear sequential flow.</span></li>
+                        <li class="font-semibold text-current-accent" style="transition-delay: 0.4s;">Agile Model: <span class="font-normal text-current-text">Iterative, focused on flexibility and feedback.</span></li>
+                        <li class="font-semibold text-current-accent" style="transition-delay: 0.5s;">Spiral Model: <span class="font-normal text-current-text">Combines iterative development with systematic progression.</span></li>
+                    </ul>
+                    <ul class="space-y-3">
+                        <li class="font-semibold text-current-accent" style="transition-delay: 0.6s;">V-Model: <span class="font-normal text-current-text">Validation and verification at each stage.</span></li>
+                        <li class="font-semibold text-current-accent" style="transition-delay: 0.7s;">Incremental Model: <span class="font-normal text-current-text">Develops software in increasing levels of functionality.</span></li>
+                    </ul>
+                </div>
+                <h3 class="text-xl font-bold mt-8 mb-4 text-current-accent" style="transition-delay: 0.9s;">Key Considerations When Choosing a Model:</h3>
+                <ul class="list-disc list-inside text-lg ml-4" style="transition-delay: 1.0s;">
+                    <li>Project complexity and size</li>
+                    <li>Team expertise and experience</li>
+                    <li>Project timeline and constraints</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Slide 10: Conclusion (Page 10) -->
+        <section id="slide-10" data-slide-index="10" data-title="Conclusion" class="min-h-screen pt-20 p-8 bg-current-bg text-current-text transition-colors duration-500 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full slide-content">
+                <h2 class="text-4xl font-bold mb-8 text-current-primary flex items-center" style="transition-delay: 0.1s;">
+                    <!-- Lucide: Check Circle -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                    Conclusion
+                </h2>
+                <div class="space-y-4 text-xl">
+                    <p class="p-4 rounded-xl bg-card-bg shadow-lg border-l-4 border-current-accent" style="transition-delay: 0.3s;">
+                        <span class="font-bold text-current-primary">The Software Development Life Cycle (SDLC)</span> provides a structured and systematic approach essential for developing high-quality software.
+                    </p>
+                    <div class="grid md:grid-cols-3 gap-4 text-base">
+                        <div class="p-4 rounded-xl bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.5s;">
+                            <h3 class="font-semibold text-current-accent mb-1">Structure</h3>
+                            <p>Provides a clear, organized framework that guides teams through the entire process.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.7s;">
+                            <h3 class="font-semibold text-current-accent mb-1">Flexibility</h3>
+                            <p>Selection of the appropriate SDLC model is critical for project success and delivery.</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-card-bg shadow-md border border-border-color" style="transition-delay: 0.9s;">
+                            <h3 class="font-semibold text-current-accent mb-1">Results</h3>
+                            <p>Enhances software quality, improves efficiency, and achieves greater user satisfaction.</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-center italic mt-10 text-gray-500 dark:text-gray-400" style="transition-delay: 1.1s;">
+                    By diligently following SDLC principles and best practices, organizations can ensure successful software development projects.
+                </p>
+            </div>
+        </section>
+
+        <!-- Footer with Metadata -->
+        <footer class="p-6 text-center text-sm bg-card-bg border-t border-border-color transition-colors">
+            <p>&copy; <span id="current-year"></span> SDLC Presentation. Author: Besong Wisdom. Institution: University of Buea. Date: 15/09/2025.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = Array.from(document.querySelectorAll('section[data-slide-index]'));
+            const contentSlides = slides.filter(s => parseInt(s.dataset.slideIndex) > 0);
+            const totalContentSlides = contentSlides.length;
+            const agendaList = document.getElementById('agenda-list');
+            const mobileAgendaList = document.getElementById('mobile-agenda-list');
+            const pageNumberDisplay = document.getElementById('page-number');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const themeToggle = document.getElementById('theme-toggle');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            const agendaToggle = document.getElementById('agenda-toggle');
+            const agendaModal = document.getElementById('agenda-modal');
+            let currentSlideIndex = 0; // Starts at 0 for the Title Slide
+
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+
+            // --- THEME LOGIC ---
+            const initialTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            
+            function setTheme(theme) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+                localStorage.setItem('theme', theme);
+            }
+
+            setTheme(initialTheme);
+
+            themeToggle.addEventListener('click', () => {
+                const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                setTheme(newTheme);
+            });
+
+            // --- AGENDA GENERATION ---
+            function createAgendaItem(slide, index, isMobile = false) {
+                const title = slide.dataset.title;
+                const li = document.createElement('li');
+                li.classList.add('transition', 'duration-300');
+                
+                const button = document.createElement('a');
+                button.href = `#slide-${index}`;
+                button.textContent = `${index}. ${title}`;
+                button.classList.add(
+                    'block', 'p-2', 'rounded-lg', 'cursor-pointer', 'hover:bg-current-accent/20', 
+                    'text-current-text', 'aria-current:bg-current-primary/20', 'aria-current:font-bold',
+                    'aria-current:text-current-primary', 'transition-colors'
+                );
+                button.setAttribute('role', 'menuitem');
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Custom scroll function to compensate for fixed header
+                    scrollToSlide(index);
+                    if (isMobile) { closeAgendaModal(); }
+                });
+
+                li.appendChild(button);
+                return li;
+            }
+
+            // Generate agenda items for content slides (index 1 to 10)
+            contentSlides.forEach((slide, i) => {
+                const index = i + 1; // Content slides start at index 1
+                agendaList.appendChild(createAgendaItem(slide, index));
+                mobileAgendaList.appendChild(createAgendaItem(slide, index, true));
+            });
+
+            // --- NAVIGATION LOGIC ---
+            window.scrollToSlide = (index) => {
+                const targetSlide = document.getElementById(`slide-${index}`);
+                if (targetSlide) {
+                    const headerHeight = document.querySelector('header').offsetHeight;
+                    const offset = targetSlide.getBoundingClientRect().top + window.scrollY - headerHeight - 10;
+                    window.scrollTo({ top: offset, behavior: 'smooth' });
+                    // Explicitly update after scroll if necessary (for buttons)
+                    updateNavigationState(index); 
+                }
+            };
+            
+            window.navigate = (direction) => {
+                let targetIndex = currentSlideIndex + direction;
+                
+                // Keep navigation within content slides (1 to 10) or title slide (0)
+                if (targetIndex < 0) targetIndex = 0;
+                if (targetIndex > totalContentSlides) targetIndex = totalContentSlides;
+
+                // Ensure 'next' from slide 0 goes to slide 1
+                if (currentSlideIndex === 0 && direction === 1) targetIndex = 1;
+                
+                scrollToSlide(targetIndex);
+            };
+
+            function updateNavigationState(index) {
+                currentSlideIndex = index;
+                
+                // Update page numbering
+                if (index === 0) {
+                    pageNumberDisplay.textContent = 'Cover Slide';
+                } else {
+                    pageNumberDisplay.textContent = `Slide ${index} of ${totalContentSlides}`;
+                }
+
+                // Update button states
+                prevButton.disabled = index === 0;
+                nextButton.disabled = index === totalContentSlides;
+
+                // Update agenda highlighting (Only highlight for content slides)
+                const agendaItems = Array.from(agendaList.querySelectorAll('a'));
+                const mobileAgendaItems = Array.from(mobileAgendaList.querySelectorAll('a'));
+
+                agendaItems.forEach(a => a.removeAttribute('aria-current'));
+                mobileAgendaItems.forEach(a => a.removeAttribute('aria-current'));
+
+                if (index > 0) {
+                    const currentAgendaItem = agendaItems.find(a => a.textContent.startsWith(`${index}.`));
+                    const currentMobileAgendaItem = mobileAgendaItems.find(a => a.textContent.startsWith(`${index}.`));
+                    if (currentAgendaItem) currentAgendaItem.setAttribute('aria-current', 'page');
+                    if (currentMobileAgendaItem) currentMobileAgendaItem.setAttribute('aria-current', 'page');
+                }
+            }
+
+            // --- INTERSECTION OBSERVER (FOR SCROLLING & ANIMATION) ---
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px 0px -50% 0px', // When the slide is past the halfway point
+                threshold: 0.2 // Trigger when 20% of the slide is visible
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const slideIndex = parseInt(entry.target.dataset.slideIndex);
+                    const slideContent = entry.target.querySelector('.slide-content');
+                    
+                    if (entry.isIntersecting) {
+                        // Mark content visible and apply staggered animation delay
+                        if (slideContent) {
+                            slideContent.classList.add('visible');
+                            Array.from(slideContent.children).forEach((el, i) => {
+                                el.style.transitionDelay = `${i * 0.1}s`;
+                            });
+                        }
+                        
+                        // Update navigation state only if the slide is significantly in the viewport (e.g., in the top half)
+                        // A more aggressive check is needed to ensure the correct slide is marked "current"
+                        if (entry.boundingClientRect.top <= window.innerHeight * 0.5) {
+                            updateNavigationState(slideIndex);
+                        }
+                    } else {
+                        // Mark content hidden when scrolling away
+                        if (slideContent) {
+                            slideContent.classList.remove('visible');
+                            Array.from(slideContent.children).forEach((el) => {
+                                el.style.transitionDelay = '0s'; // Reset delay
+                            });
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            slides.forEach(slide => observer.observe(slide));
+            
+            // --- KEYBOARD NAVIGATION ---
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                    navigate(1);
+                } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                    navigate(-1);
+                }
+            });
+
+            // --- MOBILE AGENDA MODAL ---
+            agendaToggle.addEventListener('click', () => {
+                agendaModal.classList.remove('hidden');
+            });
+            window.closeAgendaModal = () => {
+                agendaModal.classList.add('hidden');
+            };
+
+            // Close modal when clicking outside the content
+            agendaModal.addEventListener('click', (e) => {
+                if (e.target === agendaModal) {
+                    closeAgendaModal();
+                }
+            });
+
+            // Set initial state based on scroll position (for page refresh)
+            const initialSlide = slides.find(slide => {
+                const rect = slide.getBoundingClientRect();
+                return rect.top >= 0 && rect.top < window.innerHeight / 2;
+            }) || slides[0];
+            updateNavigationState(parseInt(initialSlide.dataset.slideIndex));
+
+            // Force a scroll update on load to ensure correct highlighting and visibility for the initial slide
+            setTimeout(() => {
+                updateNavigationState(currentSlideIndex);
+                const initialSlideContent = document.getElementById(`slide-${currentSlideIndex}`).querySelector('.slide-content');
+                if (initialSlideContent) {
+                    initialSlideContent.classList.add('visible');
+                    Array.from(initialSlideContent.children).forEach((el, i) => {
+                        el.style.transitionDelay = `${i * 0.1}s`;
+                    });
+                }
+            }, 50);
+
+        });
+    </script>
+</body>
+</html>
